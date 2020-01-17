@@ -79,3 +79,19 @@ fonts=(
 	font-roboto-mono-for-powerline
 	font-source-code-pro
 )
+
+vscode_extensions=(
+	766b.go-outliner
+	adpyke.vscode-sql-formatter
+	bbenoist.vagrant
+	davidnussio.vscode-jq-playground
+	eamodio.gitlens
+	esbenp.prettier-vscode
+	k--kato.intellij-idea-keybindings
+	ms-azuretools.vscode-docker
+	ms-python.python
+	ms-vscode.Go
+	PKief.material-icon-theme
+	wesbos.theme-cobalt2
+	wholroyd.jinja
+)

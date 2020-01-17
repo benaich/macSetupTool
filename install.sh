@@ -133,12 +133,25 @@ npm install -g ${node_packages[@]}
 brew cleanup
 
 ###############################################################################
-# 		Sublime Text
+# 		Installing VScode extensions
 ###############################################################################
+
+bot "Installing vscode extensions..."
+for element in "${vscode_extensions[@]}"
+do
+    code --install-extension $element
+done
+
+# ###############################################################################
+# # 		Sublime Text
+# ###############################################################################
 
 # bot "Installing global node packages..."
 # mv ~/.dotfiles/sublime ~/Library/Application\ Support/Sublime\ Text\ 3/Packages/User
 
+# cp ~/Library/Application\ Support/Sublime\ Text\ 3/Packages/User/Default\ (OSX).sublime-keymap ~/.dotfiles/sublime
+# cp ~/Library/Application\ Support/Sublime\ Text\ 3/Packages/User/Package\ Control.sublime-settings ~/.dotfiles/sublime
+# cp ~/Library/Application\ Support/Sublime\ Text\ 3/Packages/User/Preferences.sublime-settings ~/.dotfiles/sublime
 ###############################################################################
 # 		Setup OS X defaults and other useful tweaks.
 ###############################################################################
