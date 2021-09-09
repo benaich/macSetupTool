@@ -126,21 +126,21 @@ brew cask install ${fonts[@]}
 # 		Installing global node packages
 ###############################################################################
 
-bot "Installing global node packages..."
-brew install nvm
-nvm install node
-npm install -g ${node_packages[@]}
-brew cleanup
+# bot "Installing global node packages..."
+# brew install nvm
+# nvm install node
+# npm install -g ${node_packages[@]}
+# brew cleanup
 
 ###############################################################################
 # 		Installing VScode extensions
 ###############################################################################
 
-bot "Installing vscode extensions..."
-for element in "${vscode_extensions[@]}"
-do
-    code --install-extension $element
-done
+# bot "Installing vscode extensions..."
+# for element in "${vscode_extensions[@]}"
+# do
+#     code --install-extension $element
+# done
 
 # ###############################################################################
 # # 		Sublime Text

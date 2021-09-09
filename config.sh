@@ -6,8 +6,6 @@ binaries=(
 	zsh
 	zsh-completions
 	zsh-syntax-highlighting
-	#for generating dotfile symlinks
-	thoughtbot/formulae/rcm
 	ruby
 	go
 	httpie
@@ -18,49 +16,22 @@ binaries=(
 	thefuck
 	# psql client
 	libpq
-	bat
-	coreutils
-	dos2unix
-	findutils
-	gnu-sed
-	grep
+	# bat
 	# a command-line JSON processor
 	jq
-	screen
-	tmux
-	tree
-	watch
-	# like top for containers
-	ctop
-	# simplifies the man page
-	tldr
 	kubernetes-cli
 )
 
 apps=(
-	sublime-text
 	visual-studio-code
-	intellij-idea
-	docker
-	virtualbox
-	vagrant
-	ansible
 	slack
 	google-chrome
+	onepass
+	postman
 	alfred
-	spectacle
 	flycut
 	iterm2
-	flux
 	the-unarchiver
-	little-snitch
-	micro-snitch
-	caffeine
-	appcleaner
-	spotify
-	dropbox
-	google-cloud-sdk
-	qbittorrent
 )
 
 node_packages=(
