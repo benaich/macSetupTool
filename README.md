@@ -9,7 +9,7 @@ a script I use to setup my mac os and install all necessary tools using brew for
 
 ## How to run
 ```
-git colone https://github.com/benaich/macSetupTool
+git clone https://github.com/benaich/macSetupTool
 cd macSetupTool
 sh install.sh
 ```
