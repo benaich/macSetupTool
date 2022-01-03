@@ -16,4 +16,4 @@ sh install.sh
 
 you will be prompted to answer the following questions at the begining for a smooth installation :
 - What is your git username and email ? for git configuration
-- What is your dotfile repository url ? know more info about [dotfiles](https://dotfiles.github.io/)
+- What is your dotfile repository url ? (optional) know more info about [dotfiles](https://dotfiles.github.io/)

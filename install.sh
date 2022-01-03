@@ -24,12 +24,6 @@ read -r -p "What is your git username? " username
 read -r -p "What is your email? " email
 read -r -p "What is your dotfile repository url (exp: git@github.com:username/dotfiles.git)? " dotfile
 
-running "replacing items in .gitconfig with your info ($username $email)"
-
-cp config/gitconfig ~/.gitconfig
-git config --global user.name $username
-git config --global user.email $email
-
 # ###############################################################################
 # # 		Generating a new SSH key
 # ###############################################################################
@@ -63,7 +57,7 @@ sudo xcodebuild -license accept 2>&1 > /dev/null
 # # 		Install HomeBrew and Cask
 # ###############################################################################
 
-/usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 brew update
 
 bot "Installing GNU core utils (those that come with OS X are outdated)..."
@@ -76,9 +70,6 @@ brew tap homebrew/cask-versions
 # 		Install binaries
 ###############################################################################
 
-bot "Installing java..."
-brew cask install java
-
 bot "Installing binaries..."
 brew install ${binaries[@]}
 
@@ -87,7 +78,18 @@ brew install ${binaries[@]}
 # ###############################################################################
 
 bot "Installing apps to /Applications..."
-brew cask install ${apps[@]}
+brew install --cask ${apps[@]}
+
+
+# ###############################################################################
+# # 		Git config
+# ###############################################################################
+
+running "replacing items in .gitconfig with your info ($username $email)"
+
+cp config/gitconfig ~/.gitconfig
+git config --global user.name $username
+git config --global user.email $email
 
 ###############################################################################
 # 		Install oh-my-zsh
@@ -102,7 +104,6 @@ curl https://raw.githubusercontent.com/caiogondim/bullet-train.zsh/master/bullet
 ###############################################################################
 # 		Dotfiles Setup
 ###############################################################################
-# git clone git@github.com:benaich/dotfiles.git ~/.dotfiles
 
 if [[ -n ${dotfile} ]];
 then
@@ -120,7 +121,7 @@ fi
 bot "installing fonts"
 brew install fontconfig
 brew tap homebrew/cask-fonts
-brew cask install ${fonts[@]}
+brew install ${fonts[@]}
 
 ###############################################################################
 # 		Installing global node packages
@@ -142,16 +143,6 @@ do
     code --install-extension $element
 done
 
-# ###############################################################################
-# # 		Sublime Text
-# ###############################################################################
-
-# bot "Installing global node packages..."
-# mv ~/.dotfiles/sublime ~/Library/Application\ Support/Sublime\ Text\ 3/Packages/User
-
-# cp ~/Library/Application\ Support/Sublime\ Text\ 3/Packages/User/Default\ (OSX).sublime-keymap ~/.dotfiles/sublime
-# cp ~/Library/Application\ Support/Sublime\ Text\ 3/Packages/User/Package\ Control.sublime-settings ~/.dotfiles/sublime
-# cp ~/Library/Application\ Support/Sublime\ Text\ 3/Packages/User/Preferences.sublime-settings ~/.dotfiles/sublime
 ###############################################################################
 # 		Setup OS X defaults and other useful tweaks.
 ###############################################################################

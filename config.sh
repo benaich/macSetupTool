@@ -1,6 +1,7 @@
 #! /bin/sh
 
 binaries=(
+	java
 	maven
 	git
 	zsh
@@ -38,29 +39,25 @@ binaries=(
 )
 
 apps=(
-	sublime-text
 	visual-studio-code
 	intellij-idea
 	docker
 	virtualbox
 	vagrant
-	ansible
 	slack
 	google-chrome
 	alfred
 	spectacle
-	flycut
 	iterm2
-	flux
-	the-unarchiver
-	little-snitch
-	micro-snitch
-	caffeine
-	appcleaner
-	spotify
-	dropbox
-	google-cloud-sdk
-	qbittorrent
+	# flycut
+	# flux
+	# the-unarchiver
+	# caffeine
+	# appcleaner
+	# spotify
+	# dropbox
+	# google-cloud-sdk
+	# qbittorrent
 )
 
 node_packages=(
