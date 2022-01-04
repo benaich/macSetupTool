@@ -28,10 +28,10 @@ read -r -p "What is your dotfile repository url (exp: git@github.com:username/do
 # # 		Generating a new SSH key
 # ###############################################################################
 
-ssh-keygen -t rsa -b 4096 -C $email
+ssh-keygen -o -a 100 -t ed25519 -C $email
 eval "$(ssh-agent -s)"
-ssh-add -K ~/.ssh/id_rsa
-cat ~/.ssh/id_rsa.pub | pbcopy
+ssh-add -K ~/.ssh/id_ed25519
+cat ~/.ssh/id_ed25519.pub | pbcopy
 bot "Go to https://github.com/settings/ssh"
 read -p "SSH public key was copied to the clipboard. Please add it to github and press ENTER to continue..."
 
