@@ -35,15 +35,6 @@ cat ~/.ssh/id_ed25519.pub | pbcopy
 bot "Go to https://github.com/settings/ssh"
 read -p "SSH public key was copied to the clipboard. Please add it to github and press ENTER to continue..."
 
-# ###########################################################
-# 		/etc/hosts -- spyware/ad blocking
-# ###########################################################
-
-action "Overwriting /etc/hosts with the ad-blocking hosts file from someonewhocares.org? (from ./configs/hosts file)"
-sudo cp /etc/hosts /etc/hosts.backup
-sudo cp ./configs/hosts /etc/hosts
-bot "Your /etc/hosts file has been updated. Last version is saved in /etc/hosts.backup"
-
 # # ###########################################################
 # # 		Install XCode Dev Tools
 # # ###########################################################
@@ -141,6 +132,16 @@ bot "Installing vscode extensions..."
 for element in "${vscode_extensions[@]}"
 do
     code --install-extension $element
+done
+
+###############################################################################
+# 		Installing Mirakl repositories
+###############################################################################
+
+bot "Installing Mirakl repositories..."
+for element in "${repositories[@]}"
+do
+    git clone git@github.com:mirakl/$element.git
 done
 
 ###############################################################################

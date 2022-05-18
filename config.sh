@@ -7,7 +7,7 @@ binaries=(
 	zsh
 	zsh-completions
 	zsh-syntax-highlighting
-	#for generating dotfile symlinks
+	# for generating dotfile symlinks
 	thoughtbot/formulae/rcm
 	ruby
 	go
@@ -15,8 +15,6 @@ binaries=(
 	# a command-line fuzzy finder
 	fzf
 	bash-completion
-	# it corrects your previous console command
-	thefuck
 	# psql client
 	libpq
 	bat
@@ -27,8 +25,6 @@ binaries=(
 	grep
 	# a command-line JSON processor
 	jq
-	screen
-	tmux
 	tree
 	watch
 	# like top for containers
@@ -51,7 +47,7 @@ apps=(
 	iterm2
 	# flycut
 	# flux
-	# the-unarchiver
+	the-unarchiver
 	# caffeine
 	# appcleaner
 	# spotify
@@ -91,4 +87,23 @@ vscode_extensions=(
 	PKief.material-icon-theme
 	wesbos.theme-cobalt2
 	wholroyd.jinja
+)
+
+repositories=(
+	mirabox
+	app-candydates
+	app-cima
+	app-seed
+	lib-async-task
+	app-consistency
+	app-seller-payment
+	mmp
+	lib-messaging
+	app-invoice
+	app-slush
+	gateway
+	sandbox-core
+	git-ops
+	tools-remote
+	mini-marketplace
 )
