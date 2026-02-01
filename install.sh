@@ -88,9 +88,25 @@ git config --global user.email $email
 
 bot "setting zsh (/usr/local/bin/zsh) as your shell (password required)"
 sh -c "$(curl -fsSL https://raw.github.com/robbyrussell/oh-my-zsh/master/tools/install.sh | sed '/\s*env\s\s*zsh\s*/d')"
-mkdir ~/.oh-my-zsh/plugins/zsh-autosuggestions
+mkdir -p ~/.oh-my-zsh/plugins/zsh-autosuggestions
 git clone git://github.com/zsh-users/zsh-autosuggestions ~/.oh-my-zsh/plugins/zsh-autosuggestions
-curl https://raw.githubusercontent.com/caiogondim/bullet-train.zsh/master/bullet-train.zsh-theme --output ~/.oh-my-zsh/themes/bullet-train.zsh-theme
+
+###############################################################################
+# 		Install and configure Starship prompt
+###############################################################################
+
+bot "Installing Starship prompt..."
+# Starship is installed via Homebrew in the binaries section
+
+# Initialize Starship in .zshrc (will be overridden by dotfiles if present)
+if ! grep -q 'eval "$(starship init zsh)"' ~/.zshrc 2>/dev/null; then
+    echo '' >> ~/.zshrc
+    echo '# Initialize Starship prompt' >> ~/.zshrc
+    echo 'eval "$(starship init zsh)"' >> ~/.zshrc
+    ok "Starship initialization added to .zshrc"
+else
+    ok "Starship already configured in .zshrc"
+fi
 
 ###############################################################################
 # 		Dotfiles Setup
@@ -115,13 +131,33 @@ brew tap homebrew/cask-fonts
 brew install ${fonts[@]}
 
 ###############################################################################
-# 		Installing global node packages
+# 		Installing global node packages with fnm
 ###############################################################################
 
-bot "Installing global node packages..."
-brew install nvm
-nvm install node
-npm install -g ${node_packages[@]}
+bot "Installing global node packages with fnm..."
+# fnm is installed via Homebrew in the binaries section
+
+# Setup fnm environment
+eval "$(fnm env --use-on-cd)"
+
+# Install latest LTS Node.js version
+fnm install --lts
+ok "Node.js LTS installed via fnm"
+
+# Install global npm packages
+if [ ${#node_packages[@]} -gt 0 ]; then
+    npm install -g ${node_packages[@]}
+    ok "Global npm packages installed"
+fi
+
+# Add fnm initialization to .zshrc if not present
+if ! grep -q 'fnm env' ~/.zshrc 2>/dev/null; then
+    echo '' >> ~/.zshrc
+    echo '# Initialize fnm (Fast Node Manager)' >> ~/.zshrc
+    echo 'eval "$(fnm env --use-on-cd)"' >> ~/.zshrc
+    ok "fnm initialization added to .zshrc"
+fi
+
 brew cleanup
 
 ###############################################################################
@@ -135,14 +171,23 @@ do
 done
 
 ###############################################################################
-# 		Installing Mirakl repositories
+# 		Setup Colima (Docker Desktop replacement)
 ###############################################################################
 
-bot "Installing Mirakl repositories..."
-for element in "${repositories[@]}"
-do
-    git clone git@github.com:mirakl/$element.git
-done
+bot "Setting up Colima..."
+# Colima, docker, and docker-compose are installed via Homebrew in the binaries section
+
+# Start Colima with reasonable defaults (4 CPUs, 8GB RAM, 100GB disk)
+colima start --cpu 4 --memory 8 --disk 100 --arch $(uname -m) 2>/dev/null || {
+    warn "Colima may already be running or needs manual configuration"
+}
+
+# Verify Docker is working
+if docker ps > /dev/null 2>&1; then
+    ok "Docker is running via Colima"
+else
+    warn "Colima setup may need manual configuration. Run 'colima start' after installation."
+fi
 
 ###############################################################################
 # 		Setup OS X defaults and other useful tweaks.

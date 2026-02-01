@@ -32,19 +32,26 @@ binaries=(
 	# simplifies the man page
 	tldr
 	kubernetes-cli
+	# Docker runtime replacement
+	colima
+	docker
+	docker-compose
+	# Fast Node Manager (replaces nvm)
+	fnm
+	# Modern shell prompt
+	starship
 )
 
 apps=(
 	visual-studio-code
 	intellij-idea
-	docker
 	virtualbox
 	vagrant
 	slack
-	google-chrome
-	alfred
-	spectacle
-	iterm2
+	arc
+	raycast
+	rectangle
+	ghostty
 	# flycut
 	# flux
 	the-unarchiver
@@ -87,23 +94,4 @@ vscode_extensions=(
 	PKief.material-icon-theme
 	wesbos.theme-cobalt2
 	wholroyd.jinja
-)
-
-repositories=(
-	mirabox
-	app-candydates
-	app-cima
-	app-seed
-	lib-async-task
-	app-consistency
-	app-seller-payment
-	mmp
-	lib-messaging
-	app-invoice
-	app-slush
-	gateway
-	sandbox-core
-	git-ops
-	tools-remote
-	mini-marketplace
 )
