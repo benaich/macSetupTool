@@ -10,6 +10,8 @@ This setup uses current best-in-class tools optimized for Apple Silicon:
 - **Ghostty**: GPU-accelerated native terminal written in Zig
 - **Arc**: AI-powered Chromium-based browser with vertical tabs
 - **Colima**: Lightweight Docker runtime (90% less memory than Docker Desktop)
+- **1Password**: Password manager for developer secrets and SSH workflows
+- **VS Code**: General-purpose code editor with development extensions
 - **Rectangle**: Apple Silicon native window manager (replaces deprecated Spectacle)
 - **Starship**: Fast cross-shell prompt written in Rust
 - **fnm**: Fast Node Manager (20-40x faster than nvm)
@@ -48,16 +50,16 @@ You will be prompted for:
 
 ### Development Tools
 - Languages: Java, Ruby, Go, Node.js (via fnm)
-- Tools: Git, Maven, Docker (via Colima), Kubernetes CLI
-- Utilities: httpie, jq, fzf, bat, tree, ctop, tealdeer
+- Tools: Git, GitHub CLI, Maven, Docker (via Colima), AWS CLI, Terraform switching, Vault, Ansible
+- Utilities: httpie, jq, yq, fzf, ripgrep, bat, tree, ctop, htop, tealdeer, just, mkcert, tmux
 
 ### Applications
 - Editors: VS Code, IntelliJ IDEA
-- Browsers: Arc
-- Productivity: Raycast, Rectangle, Slack
+- Browsers: Arc, Firefox, Google Chrome
+- Productivity: Raycast, Rectangle, Slack, Obsidian, 1Password, Zoom
 - Terminal: Ghostty
-- DevOps: VirtualBox, Vagrant
-- Utilities: The Unarchiver
+- DevOps: VirtualBox, Vagrant, Postman, DBeaver, Figma
+- Utilities: The Unarchiver, Karabiner-Elements, Itsycal, Caffeine
 
 ### Shell Setup
 - oh-my-zsh with plugins (zsh-autosuggestions)
@@ -65,7 +67,7 @@ You will be prompted for:
 - Nerd Fonts for terminal and prompt icons
 
 ### VS Code Extensions
-Essential extensions including GitLens, Docker, Python, Go, Prettier, and more.
+Essential extensions including GitLens, Docker, Python, Go, ESLint, YAML, XML, Prettier, Copilot, Claude Code, and more.
 
 ## Post-Installation
 

@@ -3,10 +3,13 @@
 binaries=(
 	java
 	maven
+	jenv
 	git
+	gh
 	zsh
 	zsh-completions
 	zsh-syntax-highlighting
+	tmux
 	# for generating dotfile symlinks
 	thoughtbot/formulae/rcm
 	ruby
@@ -14,6 +17,8 @@ binaries=(
 	httpie
 	# a command-line fuzzy finder
 	fzf
+	# fast source search
+	ripgrep
 	bash-completion
 	# psql client
 	libpq
@@ -25,17 +30,41 @@ binaries=(
 	grep
 	# a command-line JSON processor
 	jq
+	# a command-line YAML, JSON, XML, CSV processor
+	yq
 	tree
 	watch
 	# like top for containers
 	ctop
+	htop
 	# fast tldr client
 	tealdeer
-	kubernetes-cli
+	# task runner for project-local commands
+	just
+	# local development certificates
+	mkcert
+	# Python environment and CLI tooling
+	uv
+	pyenv
+	pipx
+	awscli
+	vault
+	ansible
 	# Docker runtime replacement
 	colima
 	docker
 	docker-compose
+	docker-credential-helper
+	# file watching for development tools
+	watchman
+	# media and image utilities
+	ffmpeg
+	imagemagick
+	yt-dlp
+	# networking and macOS helpers
+	websocat
+	duti
+	rename
 	# Fast Node Manager (replaces nvm)
 	fnm
 	# Modern shell prompt
@@ -43,23 +72,38 @@ binaries=(
 )
 
 apps=(
+	1password
 	visual-studio-code
 	intellij-idea
+	fork
 	virtualbox
 	vagrant
 	slack
 	arc
+	firefox
+	google-chrome
 	raycast
 	rectangle
+	karabiner-elements
+	itsycal
+	caffeine
 	ghostty
+	obsidian
+	postman
+	dbeaver-community
+	figma
+	zoom
+	aws-vault-binary
+	gcloud-cli
+	tfswitch
+	codex
+	claude-code@latest
 	# flycut
 	# flux
 	the-unarchiver
-	# caffeine
 	# appcleaner
 	# spotify
 	# dropbox
-	# google-cloud-sdk
 	# qbittorrent
 )
 
@@ -87,6 +131,12 @@ vscode_extensions=(
 	ms-azuretools.vscode-docker
 	ms-python.python
 	golang.Go
+	dbaeumer.vscode-eslint
+	redhat.vscode-yaml
+	redhat.vscode-xml
+	yoavbls.pretty-ts-errors
+	github.copilot-chat
+	anthropic.claude-code
 	PKief.material-icon-theme
 	wesbos.theme-cobalt2
 	wholroyd.jinja
