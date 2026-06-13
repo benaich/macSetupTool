@@ -1,10 +1,15 @@
-#!/bin/bash
+#!/usr/bin/env bash
+
+if ! declare -F warn >/dev/null || ! declare -F ok >/dev/null; then
+    SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+    source "$SCRIPT_DIR/util.sh"
+fi
 
 # Disable the sound effects on boot
-sudo nvram SystemAudioVolume=" "
+sudo nvram SystemAudioVolume=" " 2>/dev/null || warn "Could not disable the boot sound on this Mac."
 
 # hostname
-sudo scutil --set HostName macpro
+sudo scutil --set HostName macpro || warn "Could not set HostName."
 
 # Disable Spotlight
 # sudo launchctl unload -w /System/Library/LaunchDaemons/com.apple.metadata.mds.plist
@@ -93,7 +98,9 @@ defaults write com.apple.screensaver askForPassword -int 1
 defaults write com.apple.screensaver askForPasswordDelay -int 0
 
 # Save screenshots to desktop and disable the horrific drop-shadow.
-defaults write com.apple.screencapture location -string "~/Desktop/Screenshots"
+screenshot_dir="$HOME/Desktop/Screenshots"
+mkdir -p "$screenshot_dir"
+defaults write com.apple.screencapture location -string "$screenshot_dir"
 defaults write com.apple.screencapture type -string "png"
 defaults write com.apple.screencapture disable-shadow -bool true
 
@@ -114,7 +121,7 @@ chflags nohidden ~/Library
 chflags nohidden /Volumes
 
 # Always open everything in Finder's column view. This is important.
-defaults write com.apple.Finder FXPreferredViewStyle Clmv
+defaults write com.apple.finder FXPreferredViewStyle Clmv
 
 # Show hidden files and file extensions by default
 defaults write com.apple.finder AppleShowAllFiles -bool true
@@ -167,7 +174,7 @@ defaults -currentHost write NSGlobalDomain com.apple.mouse.tapBehavior -int 1
 defaults write NSGlobalDomain com.apple.mouse.tapBehavior -int 1
 
 # Set a really fast keyboard repeat rate.
-defaults write -g KeyRepeat -int 0.02
+defaults write -g KeyRepeat -int 1
 defaults write NSGlobalDomain InitialKeyRepeat -int 12
 
 # Disable press-and-hold for keys in favor of key repeat.
@@ -177,7 +184,7 @@ defaults write -g ApplePressAndHoldEnabled -bool false
 defaults write NSGlobalDomain NSAutomaticSpellingCorrectionEnabled -bool false
 
 # Stop iTunes from responding to the keyboard media keys
-launchctl unload -w /System/Library/LaunchAgents/com.apple.rcd.plist 2> /dev/null
+launchctl unload -w /System/Library/LaunchAgents/com.apple.rcd.plist 2> /dev/null || true
 
 ###############################################################################
 # Rectangle.app                                                               #
@@ -193,3 +200,9 @@ launchctl unload -w /System/Library/LaunchAgents/com.apple.rcd.plist 2> /dev/nul
 
 # Ghostty configuration is managed via config file at ~/.config/ghostty/config
 # Symlink will be created by dotfiles installation if present
+
+for app in Dock Finder SystemUIServer; do
+    killall "$app" >/dev/null 2>&1 || true
+done
+
+ok "macOS defaults applied"

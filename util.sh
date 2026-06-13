@@ -1,10 +1,10 @@
-#! /bin/sh
+#!/usr/bin/env bash
 
 # ###########################################################
-# printing wilth colors
+# printing with colors
 # ###########################################################
 
-ESC_SEQ="\x1b["
+ESC_SEQ=$'\033['
 COL_RESET=$ESC_SEQ"39;49;00m"
 COL_RED=$ESC_SEQ"31;01m"
 COL_GREEN=$ESC_SEQ"32;01m"
@@ -14,25 +14,25 @@ COL_MAGENTA=$ESC_SEQ"35;01m"
 COL_CYAN=$ESC_SEQ"36;01m"
 
 function ok() {
-    echo -e "$COL_GREEN[ok]$COL_RESET "$1
+    printf '%b[ok]%b %s\n' "$COL_GREEN" "$COL_RESET" "$*"
 }
 
 function bot() {
-    echo -e "\n$COL_GREEN\[._.]/$COL_RESET - "$1
+    printf '\n%b[._.]%b - %s\n' "$COL_GREEN" "$COL_RESET" "$*"
 }
 
 function running() {
-    echo -en "$COL_YELLOW ⇒ $COL_RESET"$1": "
+    printf '%b=>%b %s: ' "$COL_YELLOW" "$COL_RESET" "$*"
 }
 
 function action() {
-    echo -e "\n$COL_YELLOW[action]:$COL_RESET\n ⇒ $1..."
+    printf '\n%b[action]:%b\n => %s...\n' "$COL_YELLOW" "$COL_RESET" "$*"
 }
 
 function warn() {
-    echo -e "$COL_YELLOW[warning]$COL_RESET "$1
+    printf '%b[warning]%b %s\n' "$COL_YELLOW" "$COL_RESET" "$*"
 }
 
 function error() {
-    echo -e "$COL_RED[error]$COL_RESET "$1
+    printf '%b[error]%b %s\n' "$COL_RED" "$COL_RESET" "$*"
 }

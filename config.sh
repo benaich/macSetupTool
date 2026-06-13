@@ -1,4 +1,4 @@
-#! /bin/sh
+#!/usr/bin/env bash
 
 binaries=(
 	java
@@ -29,8 +29,8 @@ binaries=(
 	watch
 	# like top for containers
 	ctop
-	# simplifies the man page
-	tldr
+	# fast tldr client
+	tealdeer
 	kubernetes-cli
 	# Docker runtime replacement
 	colima
@@ -68,16 +68,12 @@ node_packages=(
 )
 
 fonts=(
-	font-meslo-for-powerline
-	font-fontawesome
-	font-awesome-terminal-fonts
-	font-hack
-	font-inconsolata-dz-for-powerline
-	font-inconsolata-g-for-powerline
-	font-inconsolata-for-powerline
+	font-meslo-lg-nerd-font
+	font-hack-nerd-font
+	font-jetbrains-mono
 	font-roboto-mono
-	font-roboto-mono-for-powerline
 	font-source-code-pro
+	font-fontawesome
 )
 
 vscode_extensions=(
@@ -90,7 +86,7 @@ vscode_extensions=(
 	k--kato.intellij-idea-keybindings
 	ms-azuretools.vscode-docker
 	ms-python.python
-	ms-vscode.Go
+	golang.Go
 	PKief.material-icon-theme
 	wesbos.theme-cobalt2
 	wholroyd.jinja

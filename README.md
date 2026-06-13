@@ -13,6 +13,7 @@ This setup uses current best-in-class tools optimized for Apple Silicon:
 - **Rectangle**: Apple Silicon native window manager (replaces deprecated Spectacle)
 - **Starship**: Fast cross-shell prompt written in Rust
 - **fnm**: Fast Node Manager (20-40x faster than nvm)
+- **Nerd Fonts**: Modern icon-capable developer fonts for prompts and terminals
 
 ## Architecture
 
@@ -35,7 +36,7 @@ The tool is organized into four main scripts:
 ```bash
 git clone https://github.com/benaich/macSetupTool
 cd macSetupTool
-sh install.sh
+bash install.sh
 ```
 
 You will be prompted for:
@@ -48,7 +49,7 @@ You will be prompted for:
 ### Development Tools
 - Languages: Java, Ruby, Go, Node.js (via fnm)
 - Tools: Git, Maven, Docker (via Colima), Kubernetes CLI
-- Utilities: httpie, jq, fzf, bat, tree, ctop, tldr
+- Utilities: httpie, jq, fzf, bat, tree, ctop, tealdeer
 
 ### Applications
 - Editors: VS Code, IntelliJ IDEA
@@ -61,10 +62,10 @@ You will be prompted for:
 ### Shell Setup
 - oh-my-zsh with plugins (zsh-autosuggestions)
 - Starship prompt
-- Powerline fonts for terminal
+- Nerd Fonts for terminal and prompt icons
 
 ### VS Code Extensions
-16 essential extensions including GitLens, Docker, Python, Go, Prettier, and more.
+Essential extensions including GitLens, Docker, Python, Go, Prettier, and more.
 
 ## Post-Installation
 
@@ -149,7 +150,7 @@ Edit arrays in `config.sh`:
 
 - **binaries**: Homebrew formulae (CLI tools)
 - **apps**: Homebrew casks (GUI applications)
-- **fonts**: Font packages from homebrew/cask-fonts
+- **fonts**: Homebrew font casks
 - **node_packages**: Global npm packages
 - **vscode_extensions**: VS Code extension IDs
 

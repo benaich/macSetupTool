@@ -1,7 +1,90 @@
-#! /bin/sh
+#!/usr/bin/env bash
 
-source ./util.sh
-source ./config.sh
+set -Eeuo pipefail
+
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+
+source "$SCRIPT_DIR/util.sh"
+source "$SCRIPT_DIR/config.sh"
+
+function cleanup() {
+    if [[ -n "${SUDO_KEEPALIVE_PID:-}" ]]; then
+        kill "$SUDO_KEEPALIVE_PID" 2>/dev/null || true
+    fi
+}
+
+function on_error() {
+    local line_number="$1"
+    error "Install failed near line ${line_number}."
+}
+
+function ensure_homebrew() {
+    if command -v brew >/dev/null 2>&1; then
+        return
+    fi
+
+    if [[ -x /opt/homebrew/bin/brew ]]; then
+        eval "$(/opt/homebrew/bin/brew shellenv)"
+        return
+    fi
+
+    if [[ -x /usr/local/bin/brew ]]; then
+        eval "$(/usr/local/bin/brew shellenv)"
+        return
+    fi
+
+    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+    if [[ -x /opt/homebrew/bin/brew ]]; then
+        eval "$(/opt/homebrew/bin/brew shellenv)"
+    elif [[ -x /usr/local/bin/brew ]]; then
+        eval "$(/usr/local/bin/brew shellenv)"
+    else
+        error "Homebrew installation finished, but brew is not available in PATH."
+        exit 1
+    fi
+}
+
+function append_to_zshrc_once() {
+    local needle="$1"
+    local label="$2"
+    local line="$3"
+    local zshrc="$HOME/.zshrc"
+
+    touch "$zshrc"
+    if grep -Fq "$needle" "$zshrc"; then
+        ok "$label already configured in .zshrc"
+        return
+    fi
+
+    {
+        printf '\n# %s\n' "$label"
+        printf '%s\n' "$line"
+    } >> "$zshrc"
+    ok "$label added to .zshrc"
+}
+
+function clone_or_update_repo() {
+    local repo_url="$1"
+    local target_dir="$2"
+    local label="$3"
+
+    if [[ -d "$target_dir/.git" ]]; then
+        ok "$label already cloned"
+        git -C "$target_dir" pull --ff-only || warn "Could not update $label, continuing with existing checkout."
+        return
+    fi
+
+    if [[ -e "$target_dir" ]]; then
+        warn "$target_dir already exists but is not a git checkout. Skipping $label clone."
+        return
+    fi
+
+    git clone "$repo_url" "$target_dir"
+}
+
+trap cleanup EXIT
+trap 'on_error "$LINENO"' ERR
 
 bot "Hi! I'm going to install tooling and tweak your system settings. Here I go..."
 
@@ -14,62 +97,94 @@ sudo -v
 
 # Keep-alive: update existing sudo time stamp if set, otherwise do nothing.
 while true; do sudo -n true; sleep 60; kill -0 "$$" || exit; done 2>/dev/null &
+SUDO_KEEPALIVE_PID="$!"
 
 # ###############################################################################
 # # 		Git config
 # ###############################################################################
 
 bot "OK, now I am going to update the .gitconfig for your user info:"
-read -r -p "What is your git username? " username
-read -r -p "What is your email? " email
+current_git_name="$(git config --global --get user.name 2>/dev/null || true)"
+current_git_email="$(git config --global --get user.email 2>/dev/null || true)"
+read -r -p "What is your git username${current_git_name:+ [$current_git_name]}? " username
+read -r -p "What is your email${current_git_email:+ [$current_git_email]}? " email
 read -r -p "What is your dotfile repository url (exp: git@github.com:username/dotfiles.git)? " dotfile
+username="${username:-$current_git_name}"
+email="${email:-$current_git_email}"
 
 # ###############################################################################
 # # 		Generating a new SSH key
 # ###############################################################################
 
-ssh-keygen -o -a 100 -t ed25519 -C $email
+ssh_key="$HOME/.ssh/id_ed25519"
+generated_ssh_key=false
+
+mkdir -p "$HOME/.ssh"
+chmod 700 "$HOME/.ssh"
+
+if [[ -f "$ssh_key" ]]; then
+    ok "SSH key already exists at $ssh_key"
+else
+    ssh-keygen -o -a 100 -t ed25519 -C "$email" -f "$ssh_key"
+    generated_ssh_key=true
+fi
+
 eval "$(ssh-agent -s)"
-ssh-add -K ~/.ssh/id_ed25519
-cat ~/.ssh/id_ed25519.pub | pbcopy
-bot "Go to https://github.com/settings/ssh"
-read -p "SSH public key was copied to the clipboard. Please add it to github and press ENTER to continue..."
+if ssh-add --apple-use-keychain "$ssh_key" 2>/dev/null; then
+    ok "SSH key added to agent and Apple keychain"
+elif ssh-add -K "$ssh_key" 2>/dev/null; then
+    ok "SSH key added to agent and Apple keychain"
+else
+    ssh-add "$ssh_key"
+fi
+
+pbcopy < "${ssh_key}.pub"
+if [[ "$generated_ssh_key" == true ]]; then
+    bot "Go to https://github.com/settings/ssh"
+    read -r -p "SSH public key was copied to the clipboard. Please add it to github and press ENTER to continue..."
+else
+    ok "Existing SSH public key copied to clipboard"
+fi
 
 # # ###########################################################
 # # 		Install XCode Dev Tools
 # # ###########################################################
 
 bot "ensuring build/install tools are available"
-xcode-select --install 2>&1 > /dev/null
-sudo xcode-select -s /Applications/Xcode.app/Contents/Developer 2>&1 > /dev/null
-sudo xcodebuild -license accept 2>&1 > /dev/null
+if xcode-select -p >/dev/null 2>&1; then
+    ok "Xcode Command Line Tools are already available"
+else
+    xcode-select --install >/dev/null 2>&1 || warn "Xcode Command Line Tools installation prompt may already be open."
+fi
+
+if [[ -d /Applications/Xcode.app/Contents/Developer ]]; then
+    sudo xcode-select -s /Applications/Xcode.app/Contents/Developer >/dev/null 2>&1 || warn "Could not select full Xcode developer directory."
+fi
+
+if command -v xcodebuild >/dev/null 2>&1; then
+    sudo xcodebuild -license accept >/dev/null 2>&1 || warn "Could not accept Xcode license automatically."
+fi
 
 # ###############################################################################
 # # 		Install HomeBrew and Cask
 # ###############################################################################
 
-/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+ensure_homebrew
 brew update
-
-bot "Installing GNU core utils (those that come with OS X are outdated)..."
-brew install coreutils
-
-bot "Adding nightly/beta Cask versions..."
-brew tap homebrew/cask-versions
 
 ###############################################################################
 # 		Install binaries
 ###############################################################################
 
 bot "Installing binaries..."
-brew install ${binaries[@]}
+brew install "${binaries[@]}"
 
 # ###############################################################################
 # # 		Install apps
 # ###############################################################################
 
 bot "Installing apps to /Applications..."
-brew install --cask ${apps[@]}
+brew install --cask "${apps[@]}"
 
 
 # ###############################################################################
@@ -78,18 +193,42 @@ brew install --cask ${apps[@]}
 
 running "replacing items in .gitconfig with your info ($username $email)"
 
-cp config/gitconfig ~/.gitconfig
-git config --global user.name $username
-git config --global user.email $email
+if [[ -f "$HOME/.gitconfig" && ! -f "$HOME/.gitconfig.macSetupTool.bak" ]]; then
+    cp "$HOME/.gitconfig" "$HOME/.gitconfig.macSetupTool.bak"
+    ok "Existing .gitconfig backed up to ~/.gitconfig.macSetupTool.bak"
+fi
+
+cp "$SCRIPT_DIR/config/gitconfig" "$HOME/.gitconfig"
+if [[ -n "$username" ]]; then
+    git config --global user.name "$username"
+fi
+if [[ -n "$email" ]]; then
+    git config --global user.email "$email"
+fi
+ok "Git config updated"
 
 ###############################################################################
 # 		Install oh-my-zsh
 ###############################################################################
 
-bot "setting zsh (/usr/local/bin/zsh) as your shell (password required)"
-sh -c "$(curl -fsSL https://raw.github.com/robbyrussell/oh-my-zsh/master/tools/install.sh | sed '/\s*env\s\s*zsh\s*/d')"
-mkdir -p ~/.oh-my-zsh/plugins/zsh-autosuggestions
-git clone git://github.com/zsh-users/zsh-autosuggestions ~/.oh-my-zsh/plugins/zsh-autosuggestions
+zsh_path="$(command -v zsh || true)"
+if [[ -n "$zsh_path" && "${SHELL:-}" != "$zsh_path" ]]; then
+    if grep -qxF "$zsh_path" /etc/shells; then
+        chsh -s "$zsh_path" || warn "Could not change default shell to $zsh_path."
+    else
+        warn "$zsh_path is not listed in /etc/shells. Skipping shell change."
+    fi
+fi
+
+if [[ -d "$HOME/.oh-my-zsh" ]]; then
+    ok "oh-my-zsh already installed"
+else
+    RUNZSH=no CHSH=no KEEP_ZSHRC=yes sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+fi
+
+zsh_autosuggestions_dir="$HOME/.oh-my-zsh/custom/plugins/zsh-autosuggestions"
+mkdir -p "$(dirname "$zsh_autosuggestions_dir")"
+clone_or_update_repo "https://github.com/zsh-users/zsh-autosuggestions.git" "$zsh_autosuggestions_dir" "zsh-autosuggestions"
 
 ###############################################################################
 # 		Install and configure Starship prompt
@@ -98,23 +237,15 @@ git clone git://github.com/zsh-users/zsh-autosuggestions ~/.oh-my-zsh/plugins/zs
 bot "Installing Starship prompt..."
 # Starship is installed via Homebrew in the binaries section
 
-# Initialize Starship in .zshrc (will be overridden by dotfiles if present)
-if ! grep -q 'eval "$(starship init zsh)"' ~/.zshrc 2>/dev/null; then
-    echo '' >> ~/.zshrc
-    echo '# Initialize Starship prompt' >> ~/.zshrc
-    echo 'eval "$(starship init zsh)"' >> ~/.zshrc
-    ok "Starship initialization added to .zshrc"
-else
-    ok "Starship already configured in .zshrc"
-fi
+append_to_zshrc_once 'eval "$(starship init zsh)"' "Initialize Starship prompt" 'eval "$(starship init zsh)"'
 
 ###############################################################################
 # 		Dotfiles Setup
 ###############################################################################
 
-if [[ -n ${dotfile} ]];
+if [[ -n "$dotfile" ]];
 then
-    git clone $dotfile ~/.dotfiles
+    clone_or_update_repo "$dotfile" "$HOME/.dotfiles" "dotfiles"
     bot "creating symlinks for dotfiles..."
     rcup -v
 else
@@ -126,9 +257,7 @@ fi
 # ###############################################################################
 
 bot "installing fonts"
-brew install fontconfig
-brew tap homebrew/cask-fonts
-brew install ${fonts[@]}
+brew install --cask "${fonts[@]}"
 
 ###############################################################################
 # 		Installing global node packages with fnm
@@ -145,18 +274,12 @@ fnm install --lts
 ok "Node.js LTS installed via fnm"
 
 # Install global npm packages
-if [ ${#node_packages[@]} -gt 0 ]; then
-    npm install -g ${node_packages[@]}
+if (( ${#node_packages[@]} > 0 )); then
+    npm install -g "${node_packages[@]}"
     ok "Global npm packages installed"
 fi
 
-# Add fnm initialization to .zshrc if not present
-if ! grep -q 'fnm env' ~/.zshrc 2>/dev/null; then
-    echo '' >> ~/.zshrc
-    echo '# Initialize fnm (Fast Node Manager)' >> ~/.zshrc
-    echo 'eval "$(fnm env --use-on-cd)"' >> ~/.zshrc
-    ok "fnm initialization added to .zshrc"
-fi
+append_to_zshrc_once 'fnm env' "Initialize fnm (Fast Node Manager)" 'eval "$(fnm env --use-on-cd)"'
 
 brew cleanup
 
@@ -165,10 +288,19 @@ brew cleanup
 ###############################################################################
 
 bot "Installing vscode extensions..."
-for element in "${vscode_extensions[@]}"
-do
-    code --install-extension $element
-done
+if command -v code >/dev/null 2>&1; then
+    installed_extensions="$(code --list-extensions | tr '[:upper:]' '[:lower:]')"
+    for element in "${vscode_extensions[@]}"
+    do
+        if grep -qxF "$(printf '%s' "$element" | tr '[:upper:]' '[:lower:]')" <<< "$installed_extensions"; then
+            ok "VS Code extension already installed: $element"
+        else
+            code --install-extension "$element"
+        fi
+    done
+else
+    warn "VS Code CLI is not available. Skipping extension installation."
+fi
 
 ###############################################################################
 # 		Setup Colima (Docker Desktop replacement)
@@ -178,9 +310,13 @@ bot "Setting up Colima..."
 # Colima, docker, and docker-compose are installed via Homebrew in the binaries section
 
 # Start Colima with reasonable defaults (4 CPUs, 8GB RAM, 100GB disk)
-colima start --cpu 4 --memory 8 --disk 100 --arch $(uname -m) 2>/dev/null || {
-    warn "Colima may already be running or needs manual configuration"
-}
+if colima status >/dev/null 2>&1; then
+    ok "Colima is already running"
+else
+    colima start --cpu 4 --memory 8 --disk 100 --arch "$(uname -m)" 2>/dev/null || {
+        warn "Colima may already be running or needs manual configuration"
+    }
+fi
 
 # Verify Docker is working
 if docker ps > /dev/null 2>&1; then
@@ -193,4 +329,4 @@ fi
 # 		Setup OS X defaults and other useful tweaks.
 ###############################################################################
 
-source ./osx-settings.sh
+source "$SCRIPT_DIR/osx-settings.sh"
