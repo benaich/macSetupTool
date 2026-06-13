@@ -1,0 +1,11 @@
+# Backend, API, and database work
+brew "libpq"
+brew "watchman"
+
+cask "intellij-idea"
+cask "postman"
+cask "dbeaver-community"
+
+vscode "adpyke.vscode-sql-formatter"
+vscode "davidnussio.vscode-jq-playground"
+vscode "wholroyd.jinja"

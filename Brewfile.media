@@ -1,0 +1,4 @@
+# Media and image tooling
+brew "ffmpeg"
+brew "imagemagick"
+brew "yt-dlp"

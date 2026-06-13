@@ -1,0 +1,8 @@
+# Cloud and infrastructure tooling
+brew "awscli"
+brew "vault"
+brew "ansible"
+brew "tenv"
+
+cask "aws-vault-binary"
+cask "gcloud-cli"

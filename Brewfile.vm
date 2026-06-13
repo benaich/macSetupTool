@@ -1,0 +1,5 @@
+# VM-based workflows
+cask "virtualbox"
+cask "vagrant"
+
+vscode "bbenoist.vagrant"

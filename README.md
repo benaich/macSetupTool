@@ -1,39 +1,36 @@
 ## About macSetupTool
 
-A script to automate macOS setup with modern development tools via Homebrew. This tool configures a fresh Mac for development by installing tools, setting up git with SSH keys, configuring system settings, and optionally setting up dotfiles.
+A reproducible macOS setup for software engineering work. The project installs a lean default toolchain with Homebrew Bundle, then lets you opt into heavier profiles for backend, cloud, media, personal, or VM-based workflows.
 
-## Modern Tools (2026)
+## Defaults
 
-This setup uses current best-in-class tools optimized for Apple Silicon:
+The default setup favors tools that are broadly useful on a fresh Apple Silicon Mac:
 
-- **Raycast**: Modern productivity launcher with extensions and AI features
-- **Ghostty**: GPU-accelerated native terminal written in Zig
-- **Arc**: AI-powered Chromium-based browser with vertical tabs
-- **Colima**: Lightweight Docker runtime (90% less memory than Docker Desktop)
-- **1Password**: Password manager for developer secrets and SSH workflows
-- **VS Code**: General-purpose code editor with development extensions
-- **Rectangle**: Apple Silicon native window manager (replaces deprecated Spectacle)
-- **Starship**: Fast cross-shell prompt written in Rust
-- **fnm**: Fast Node Manager (20-40x faster than nvm)
-- **Nerd Fonts**: Modern icon-capable developer fonts for prompts and terminals
-
-## Architecture
-
-The tool is organized into four main scripts:
-
-- **install.sh**: Main orchestration script that runs all setup steps in sequence
-- **config.sh**: Configuration file containing arrays of packages, apps, fonts, and VS Code extensions
-- **osx-settings.sh**: macOS system preferences (Safari, Finder, Dock, trackpad, etc.)
-- **util.sh**: Shared utility functions for colored console output
+- **Homebrew Bundle** for declarative, idempotent package installs.
+- **Ghostty** for a fast native terminal.
+- **Raycast** for launcher and productivity workflows.
+- **Colima** for Docker without Docker Desktop.
+- **VS Code** as the default editor, with baseline development extensions.
+- **fnm** for Node.js LTS.
+- **uv** for modern Python package, tool, and environment workflows.
+- **Starship** and **Nerd Fonts** for a fast shell prompt.
+- **ShellCheck** and **shfmt** for maintaining this project’s shell scripts.
 
 ## Files
 
-- `install.sh` - Main installation script
-- `config.sh` - Package lists (apps, binaries, fonts, VS Code extensions)
-- `osx-settings.sh` - System preferences (Safari, Finder, Dock, etc.)
-- `util.sh` - Colored console output utilities
+- `install.sh` - Main orchestration script.
+- `Brewfile` - Core formulae, casks, fonts, and VS Code extensions.
+- `Brewfile.personal` - Daily apps, productivity tools, and AI assistants.
+- `Brewfile.backend` - Backend, API, database, and IDE tools.
+- `Brewfile.cloud` - AWS, GCP, Vault, Terraform/OpenTofu switching, and Ansible.
+- `Brewfile.media` - Media and image utilities.
+- `Brewfile.vm` - VirtualBox and Vagrant workflows.
+- `config.sh` - Brewfile profile registry used by `install.sh`.
+- `osx-settings.sh` - macOS system preferences.
+- `util.sh` - Colored console output utilities.
+- `justfile` - Local check and format tasks.
 
-## How to run
+## How to Run
 
 ```bash
 git clone https://github.com/benaich/macSetupTool
@@ -41,74 +38,120 @@ cd macSetupTool
 bash install.sh
 ```
 
+The script installs the core `Brewfile`, then asks which optional profiles to install:
+
+```text
+personal backend cloud media vm
+```
+
+You can also run non-interactively:
+
+```bash
+MACSETUP_PROFILES="personal backend" bash install.sh
+MACSETUP_PROFILES="all" bash install.sh
+MACSETUP_PROFILES="none" bash install.sh
+```
+
 You will be prompted for:
-- **Git username and email** - for git configuration
-- **Dotfile repository URL** (optional) - see [dotfiles.github.io](https://dotfiles.github.io/)
-- **Administrator password** - for sudo operations (kept alive during installation)
 
-## What Gets Installed
+- Git username and email, with current global values as defaults.
+- Dotfile repository URL, optional.
+- Administrator password for sudo operations.
 
-### Development Tools
-- Languages: Java, Ruby, Go, Node.js (via fnm)
-- Tools: Git, GitHub CLI, Maven, Docker (via Colima), AWS CLI, Terraform switching, Vault, Ansible
-- Utilities: httpie, jq, yq, fzf, ripgrep, bat, tree, ctop, htop, tealdeer, just, mkcert, tmux
+## Core Install
+
+### Languages And Runtimes
+
+- Java, Maven
+- Ruby
+- Go
+- Node.js LTS via `fnm`
+- Python workflows via `uv`
+
+### CLI Tools
+
+- Git, GitHub CLI
+- Docker CLI, Docker Compose, Colima
+- `fzf`, `ripgrep`, `fd`, `eza`, `bat`
+- `jq`, `yq`, `tree`, `watch`, `ctop`, `htop`
+- `tealdeer`, `just`, `zoxide`, `tmux`
+- `git-delta`, `lazygit`, `mkcert`
+- `shellcheck`, `shfmt`
 
 ### Applications
-- Editors: VS Code, IntelliJ IDEA
-- Browsers: Arc, Firefox, Google Chrome
-- Productivity: Raycast, Rectangle, Slack, Obsidian, 1Password, Zoom
-- Terminal: Ghostty
-- DevOps: VirtualBox, Vagrant, Postman, DBeaver, Figma
-- Utilities: The Unarchiver, Karabiner-Elements, Itsycal, Caffeine
 
-### Shell Setup
-- oh-my-zsh with plugins (zsh-autosuggestions)
-- Starship prompt
-- Nerd Fonts for terminal and prompt icons
+- 1Password
+- Visual Studio Code
+- Ghostty
+- Raycast
+- Firefox
+- Google Chrome
+- The Unarchiver
 
-### VS Code Extensions
-Essential extensions including GitLens, Docker, Python, Go, ESLint, YAML, XML, Prettier, Copilot, Claude Code, and more.
+## Optional Profiles
+
+| Profile | Use when you need |
+| --- | --- |
+| `personal` | Slack, Zoom, Obsidian, Figma, Fork, Rectangle, Karabiner-Elements, Caffeine, Arc, Codex, Claude Code |
+| `backend` | IntelliJ IDEA, Postman, DBeaver, PostgreSQL client libraries, Watchman, SQL/JQ/Jinja VS Code extensions |
+| `cloud` | AWS CLI, AWS Vault, GCloud CLI, Vault, Terraform/OpenTofu switching with tenv, Ansible |
+| `media` | FFmpeg, ImageMagick, yt-dlp |
+| `vm` | VirtualBox, Vagrant, Vagrant VS Code extension |
 
 ## Post-Installation
 
-### Colima (Docker)
-Already started during installation. Useful commands:
+### Colima
+
+Colima is started during installation. Useful commands:
 
 ```bash
-colima start         # Start Docker runtime
-colima stop          # Stop Docker runtime
-colima status        # Check status
-colima restart       # Restart with current settings
-docker ps            # Works just like Docker Desktop
-docker-compose up    # Multi-container orchestration
+colima start
+colima stop
+colima status
+colima restart
+docker ps
+docker compose up
 ```
 
 To adjust resources:
+
 ```bash
 colima stop
 colima start --cpu 8 --memory 16 --disk 200
 ```
 
-### Starship (Shell Prompt)
-Customize your prompt at `~/.config/starship.toml`. Example:
+### Node.js
+
+Node.js LTS is installed through `fnm`:
+
+```bash
+fnm list
+fnm install --lts
+fnm install 24
+fnm use 24
+fnm default 24
+fnm current
+```
+
+The installer enables Corepack when available. Package managers such as `pnpm` and `yarn` should be selected per project through `packageManager` rather than installed globally by this setup.
+
+### Starship
+
+Customize your prompt at `~/.config/starship.toml`.
 
 ```toml
-# Get editor completions based on the config schema
 "$schema" = 'https://starship.rs/config-schema.json'
-
-# Timeout for starship to scan files (in milliseconds)
 scan_timeout = 10
-
-# Add a newline before the prompt
 add_newline = true
 ```
 
 See [starship.rs/config](https://starship.rs/config/) for all options.
 
-### Ghostty (Terminal)
-Configuration at `~/.config/ghostty/config` or via dotfiles. Example config:
+### Ghostty
 
-```
+Configuration lives at `~/.config/ghostty/config` or in your dotfiles.
+
+```text
 font-family = "JetBrains Mono"
 font-size = 14
 theme = "Catppuccin Mocha"
@@ -116,90 +159,73 @@ window-padding-x = 10
 window-padding-y = 10
 ```
 
-### fnm (Node Manager)
-Manage Node.js versions:
-
-```bash
-fnm list             # List installed versions
-fnm install 20       # Install Node 20
-fnm install --lts    # Install latest LTS
-fnm use 20           # Switch to Node 20
-fnm default 20       # Set Node 20 as default
-fnm current          # Show current version
-```
-
-Auto-switching via `.node-version` or `.nvmrc` files works automatically with `--use-on-cd`.
-
-### Rectangle (Window Manager)
-Keyboard shortcuts (same as Spectacle):
-- `⌘ + ⌥ + ←/→` - Left/Right half
-- `⌘ + ⌥ + ↑/↓` - Top/Bottom half
-- `⌘ + ⌥ + F` - Fullscreen
-- `⌘ + ⌥ + C` - Center
-
-Grant accessibility permissions when prompted on first launch.
-
-### Raycast (Productivity Launcher)
-- Replace Spotlight with Raycast in System Preferences
-- Browse extensions at raycast.com/store
-- Use `⌘ + Space` to launch (after changing from Spotlight)
-
 ## Customization
 
-### Modifying Installed Packages
+Edit the relevant Brewfile:
 
-Edit arrays in `config.sh`:
+- `Brewfile` for the default install.
+- `Brewfile.personal` for daily apps.
+- `Brewfile.backend` for backend tools.
+- `Brewfile.cloud` for cloud tools.
+- `Brewfile.media` for media tools.
+- `Brewfile.vm` for VM tools.
 
-- **binaries**: Homebrew formulae (CLI tools)
-- **apps**: Homebrew casks (GUI applications)
-- **fonts**: Homebrew font casks
-- **node_packages**: Global npm packages
-- **vscode_extensions**: VS Code extension IDs
+Use Homebrew Bundle directly when you only want packages:
 
-### macOS System Settings
+```bash
+brew bundle check --file Brewfile
+brew bundle install --file Brewfile
+brew bundle install --file Brewfile.personal
+```
 
-Edit `osx-settings.sh` to customize:
-- Safari preferences (privacy, search, homepage)
-- Finder behavior (show hidden files, column view)
-- Dock configuration (autohide, indicators)
-- Trackpad and keyboard settings (tap to click, repeat rate)
-- Screenshot location and format
-- Activity Monitor defaults
-
-### Dotfiles Integration
+## Dotfiles Integration
 
 If you provide a dotfile repository URL, the script:
-1. Clones it to `~/.dotfiles`
-2. Uses `rcup` (from thoughtbot/rcm) to create symlinks
-3. Your dotfiles can override any default configurations
+
+1. Applies it with `chezmoi` when available.
+2. Falls back to cloning it to `~/.dotfiles` and running `rcup` when `chezmoi` is unavailable and `rcup` is already installed.
+3. Lets your dotfiles override default configurations.
 
 ## SSH Key Setup
 
-The script automatically:
-1. Generates an ed25519 SSH key with 100 KDF rounds (`-a 100`)
-2. Adds it to the ssh-agent
-3. Copies the public key to your clipboard
-4. Pauses for you to add it to GitHub
+The script:
 
-This ensures secure git operations for all subsequent steps.
+1. Reuses `~/.ssh/id_ed25519` when present.
+2. Generates an ed25519 key with 100 KDF rounds when missing.
+3. Adds it to the ssh-agent and Apple keychain when possible.
+4. Copies the public key to your clipboard.
+5. Pauses for GitHub setup only when it generated a new key.
+
+## Project Maintenance
+
+```bash
+just check
+just format
+```
+
+`just check` runs Bash syntax checks, ShellCheck, and shfmt diff checks.
 
 ## Troubleshooting
 
-### Colima won't start
+### Colima Won't Start
+
 ```bash
-colima delete          # Remove existing VM
-colima start           # Create fresh VM
+colima delete
+colima start
 ```
 
-### fnm not found after installation
+### fnm Not Found After Installation
+
 ```bash
-# Reload shell configuration
 source ~/.zshrc
-# Or restart your terminal
 ```
 
-### VS Code extensions fail to install
-Ensure VS Code command line tools are installed:
+Or restart your terminal.
+
+### VS Code Extensions Fail To Install
+
+Ensure the `code` command line tool is available:
+
 ```bash
 # Open VS Code
 # Press Cmd+Shift+P
@@ -207,46 +233,35 @@ Ensure VS Code command line tools are installed:
 # Select "Install 'code' command in PATH"
 ```
 
-### Homebrew permissions issues
+## Migration Notes
+
+### From nvm To fnm
+
 ```bash
-sudo chown -R $(whoami) /usr/local/Homebrew
-```
-
-## Migration from Old Tools
-
-### From nvm to fnm
-```bash
-# Install Node versions you need
-fnm install 18
-fnm install 20
-fnm default 20
-
-# Remove nvm
+fnm install --lts
+fnm default 24
 rm -rf ~/.nvm
-# Remove nvm lines from .zshrc
 ```
 
-### From Docker Desktop to Colima
+Remove `nvm` lines from `.zshrc`.
+
+### From Docker Desktop To Colima
+
 ```bash
-# Uninstall Docker Desktop (optional)
-# Colima uses the same docker CLI commands
 colima start
-docker ps  # Should work immediately
+docker ps
 ```
 
-### From iTerm2 to Ghostty
-```bash
-# Export iTerm2 preferences first (optional)
-# Ghostty uses a simple text config file
-# See ~/.config/ghostty/config
-```
+### From iTerm2 To Ghostty
+
+Ghostty uses a plain text config file at `~/.config/ghostty/config`.
 
 ## Requirements
 
-- macOS (tested on macOS 13+)
-- Administrator access (for sudo operations)
+- macOS, tested on macOS 13+
+- Administrator access
 - Active internet connection
-- GitHub account (for SSH key setup)
+- GitHub account for SSH key setup
 
 ## License
 

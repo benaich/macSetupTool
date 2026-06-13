@@ -83,6 +83,69 @@ function clone_or_update_repo() {
     git clone "$repo_url" "$target_dir"
 }
 
+function install_brewfile() {
+    local brewfile="$1"
+    local label="$2"
+
+    if [[ ! -f "$brewfile" ]]; then
+        warn "Skipping missing Brewfile: $brewfile"
+        return
+    fi
+
+    bot "Installing $label with Homebrew Bundle..."
+    if brew bundle check --file "$brewfile" >/dev/null 2>&1; then
+        ok "$label is already satisfied"
+        return
+    fi
+
+    brew bundle install --file "$brewfile"
+}
+
+function print_optional_profiles() {
+    local entry profile description
+
+    bot "Optional profiles available:"
+    for entry in "${optional_brewfiles[@]}"; do
+        IFS=: read -r profile _ description <<< "$entry"
+        printf '  %s - %s\n' "$profile" "$description"
+    done
+}
+
+function install_optional_profiles() {
+    local selection="$1"
+    local entry profile file description requested matched
+
+    selection="${selection//,/ }"
+    if [[ -z "$selection" || "$selection" == "none" ]]; then
+        ok "No optional profiles selected"
+        return
+    fi
+
+    if [[ "$selection" == "all" ]]; then
+        for entry in "${optional_brewfiles[@]}"; do
+            IFS=: read -r profile file description <<< "$entry"
+            install_brewfile "$SCRIPT_DIR/$file" "$profile profile"
+        done
+        return
+    fi
+
+    for requested in $selection; do
+        matched=false
+        for entry in "${optional_brewfiles[@]}"; do
+            IFS=: read -r profile file description <<< "$entry"
+            if [[ "$requested" == "$profile" ]]; then
+                install_brewfile "$SCRIPT_DIR/$file" "$profile profile"
+                matched=true
+                break
+            fi
+        done
+
+        if [[ "$matched" == false ]]; then
+            warn "Unknown optional profile: $requested"
+        fi
+    done
+}
+
 trap cleanup EXIT
 trap 'on_error "$LINENO"' ERR
 
@@ -173,18 +236,19 @@ ensure_homebrew
 brew update
 
 ###############################################################################
-# 		Install binaries
+# 		Install Homebrew packages
 ###############################################################################
 
-bot "Installing binaries..."
-brew install "${binaries[@]}"
+install_brewfile "$SCRIPT_DIR/$core_brewfile" "core tools"
 
-# ###############################################################################
-# # 		Install apps
-# ###############################################################################
-
-bot "Installing apps to /Applications..."
-brew install --cask "${apps[@]}"
+print_optional_profiles
+if [[ -n "${MACSETUP_PROFILES:-}" ]]; then
+    optional_profile_selection="$MACSETUP_PROFILES"
+    ok "Using optional profiles from MACSETUP_PROFILES=$MACSETUP_PROFILES"
+else
+    read -r -p "Optional profiles to install (space-separated, all, or none) [none]: " optional_profile_selection
+fi
+install_optional_profiles "${optional_profile_selection:-none}"
 
 
 # ###############################################################################
@@ -235,7 +299,7 @@ clone_or_update_repo "https://github.com/zsh-users/zsh-autosuggestions.git" "$zs
 ###############################################################################
 
 bot "Installing Starship prompt..."
-# Starship is installed via Homebrew in the binaries section
+# Starship is installed via Homebrew Bundle
 
 append_to_zshrc_once 'eval "$(starship init zsh)"' "Initialize Starship prompt" 'eval "$(starship init zsh)"'
 
@@ -245,26 +309,26 @@ append_to_zshrc_once 'eval "$(starship init zsh)"' "Initialize Starship prompt" 
 
 if [[ -n "$dotfile" ]];
 then
-    clone_or_update_repo "$dotfile" "$HOME/.dotfiles" "dotfiles"
-    bot "creating symlinks for dotfiles..."
-    rcup -v
+    if command -v chezmoi >/dev/null 2>&1; then
+        bot "applying dotfiles with chezmoi..."
+        chezmoi init --apply "$dotfile" || warn "Could not apply dotfiles with chezmoi."
+    elif command -v rcup >/dev/null 2>&1; then
+        clone_or_update_repo "$dotfile" "$HOME/.dotfiles" "dotfiles"
+        bot "creating symlinks for dotfiles with rcup..."
+        rcup -v
+    else
+        warn "Neither chezmoi nor rcup is available. Skipping dotfiles."
+    fi
 else
     bot "no dotfiles for you :/"
 fi
 
-# ###############################################################################
-# # 		Install Fonts
-# ###############################################################################
-
-bot "installing fonts"
-brew install --cask "${fonts[@]}"
-
 ###############################################################################
-# 		Installing global node packages with fnm
+# 		Install Node.js with fnm
 ###############################################################################
 
-bot "Installing global node packages with fnm..."
-# fnm is installed via Homebrew in the binaries section
+bot "Installing Node.js LTS with fnm..."
+# fnm is installed via Homebrew Bundle
 
 # Setup fnm environment
 eval "$(fnm env --use-on-cd)"
@@ -273,10 +337,10 @@ eval "$(fnm env --use-on-cd)"
 fnm install --lts
 ok "Node.js LTS installed via fnm"
 
-# Install global npm packages
-if (( ${#node_packages[@]} > 0 )); then
-    npm install -g "${node_packages[@]}"
-    ok "Global npm packages installed"
+if command -v corepack >/dev/null 2>&1; then
+    corepack enable || warn "Could not enable Corepack. Configure pnpm/yarn per project if needed."
+else
+    warn "Corepack is not available with this Node installation. Configure pnpm/yarn per project if needed."
 fi
 
 append_to_zshrc_once 'fnm env' "Initialize fnm (Fast Node Manager)" 'eval "$(fnm env --use-on-cd)"'
@@ -284,30 +348,11 @@ append_to_zshrc_once 'fnm env' "Initialize fnm (Fast Node Manager)" 'eval "$(fnm
 brew cleanup
 
 ###############################################################################
-# 		Installing VScode extensions
-###############################################################################
-
-bot "Installing vscode extensions..."
-if command -v code >/dev/null 2>&1; then
-    installed_extensions="$(code --list-extensions | tr '[:upper:]' '[:lower:]')"
-    for element in "${vscode_extensions[@]}"
-    do
-        if grep -qxF "$(printf '%s' "$element" | tr '[:upper:]' '[:lower:]')" <<< "$installed_extensions"; then
-            ok "VS Code extension already installed: $element"
-        else
-            code --install-extension "$element"
-        fi
-    done
-else
-    warn "VS Code CLI is not available. Skipping extension installation."
-fi
-
-###############################################################################
 # 		Setup Colima (Docker Desktop replacement)
 ###############################################################################
 
 bot "Setting up Colima..."
-# Colima, docker, and docker-compose are installed via Homebrew in the binaries section
+# Colima, docker, and docker-compose are installed via Homebrew Bundle
 
 # Start Colima with reasonable defaults (4 CPUs, 8GB RAM, 100GB disk)
 if colima status >/dev/null 2>&1; then

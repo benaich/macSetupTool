@@ -1,0 +1,18 @@
+# Daily apps and personal productivity
+cask "slack"
+cask "zoom"
+cask "obsidian"
+cask "figma"
+cask "fork"
+cask "rectangle"
+cask "karabiner-elements"
+cask "caffeine"
+cask "arc"
+cask "codex"
+cask "claude-code@latest"
+
+# Personal VS Code preferences and AI assistants
+vscode "github.copilot-chat"
+vscode "anthropic.claude-code"
+vscode "k--kato.intellij-idea-keybindings"
+vscode "wesbos.theme-cobalt2"
