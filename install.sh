@@ -224,7 +224,7 @@ current_git_name="$(git config --global --get user.name 2>/dev/null || true)"
 current_git_email="$(git config --global --get user.email 2>/dev/null || true)"
 read -r -p "What is your git username${current_git_name:+ [$current_git_name]}? " username
 read -r -p "What is your email${current_git_email:+ [$current_git_email]}? " email
-read -r -p "What is your dotfile repository url (exp: git@github.com:username/dotfiles.git)? " dotfile
+read -r -p "What is your dotfile repository url (exp: git@github.com:benaich/dotfiles.git)? " dotfile
 username="${username:-$current_git_name}"
 email="${email:-$current_git_email}"
 
