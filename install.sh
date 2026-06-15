@@ -155,6 +155,29 @@ function install_brewfile() {
     brew bundle install --file "$brewfile"
 }
 
+function install_dotfiles() {
+    local repo_url="$1"
+    local target_dir="$HOME/.dotfiles"
+
+    clone_or_update_repo "$repo_url" "$target_dir" "dotfiles"
+
+    if [[ -f "$target_dir/install.sh" ]]; then
+        bot "running dotfiles install script..."
+        (cd "$target_dir" && bash ./install.sh) || warn "Could not run dotfiles install script."
+        return
+    fi
+
+    if command -v chezmoi >/dev/null 2>&1; then
+        bot "applying dotfiles with chezmoi..."
+        chezmoi init --apply "$repo_url" || warn "Could not apply dotfiles with chezmoi."
+    elif command -v rcup >/dev/null 2>&1; then
+        bot "creating symlinks for dotfiles with rcup..."
+        rcup -v || warn "Could not create dotfile symlinks with rcup."
+    else
+        warn "No dotfiles installer found. Expected $target_dir/install.sh, chezmoi, or rcup."
+    fi
+}
+
 function print_optional_profiles() {
     local entry profile description
 
@@ -361,18 +384,8 @@ append_to_zshrc_once 'eval "$(starship init zsh)"' "Initialize Starship prompt" 
 # 		Dotfiles Setup
 ###############################################################################
 
-if [[ -n "$dotfile" ]];
-then
-    if command -v chezmoi >/dev/null 2>&1; then
-        bot "applying dotfiles with chezmoi..."
-        chezmoi init --apply "$dotfile" || warn "Could not apply dotfiles with chezmoi."
-    elif command -v rcup >/dev/null 2>&1; then
-        clone_or_update_repo "$dotfile" "$HOME/.dotfiles" "dotfiles"
-        bot "creating symlinks for dotfiles with rcup..."
-        rcup -v
-    else
-        warn "Neither chezmoi nor rcup is available. Skipping dotfiles."
-    fi
+if [[ -n "$dotfile" ]]; then
+    install_dotfiles "$dotfile"
 else
     bot "no dotfiles for you :/"
 fi
