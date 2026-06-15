@@ -100,6 +100,29 @@ You will be prompted for:
 
 ## Post-Installation
 
+### Verify A Fresh Install
+
+If the terminal log looks noisy, verify the pieces that matter:
+
+```bash
+uname -m
+sysctl -in sysctl.proc_translated 2>/dev/null || true
+brew --prefix
+brew bundle check --file Brewfile
+brew bundle check --file Brewfile.personal
+brew bundle check --file Brewfile.backend
+code --list-extensions | sort
+echo "$SHELL"
+command -v zsh
+fnm current || fnm install --lts
+colima status || colima start --cpu 4 --memory 8 --disk 100 --arch "$(uname -m)"
+docker ps
+```
+
+Only run the optional Brewfile checks for profiles you selected during setup.
+
+On Apple Silicon, `sysctl -in sysctl.proc_translated` should not print `1`, and `brew --prefix` should normally be `/opt/homebrew`. If it prints `/usr/local`, stop and fix Homebrew before installing more tools.
+
 ### Colima
 
 Colima is started during installation. Useful commands:
@@ -207,6 +230,37 @@ just format
 
 ## Troubleshooting
 
+### First Install Looked Like It Failed
+
+Older versions could print `Install failed near line 162` from the sudo keepalive helper while Homebrew was still installing. If the log later says `brew bundle complete`, Homebrew probably kept going successfully.
+
+The most common first-run issues are VS Code extensions installing before VS Code has finished creating its extension metadata, and macOS refusing one of the Safari defaults writes. Rerun the affected checks:
+
+```bash
+brew bundle install --file Brewfile
+brew bundle install --file Brewfile.personal
+brew bundle install --file Brewfile.backend
+```
+
+Then run this and restart your terminal:
+
+```bash
+ZSH_PATH="$(command -v zsh)"
+grep -qxF "$ZSH_PATH" /etc/shells || echo "$ZSH_PATH" | sudo tee -a /etc/shells
+chsh -s "$ZSH_PATH"
+```
+
+### SSH Key Permissions Are Too Open
+
+OpenSSH ignores private keys that can be read by group or others. Fix the generated key and rerun the installer:
+
+```bash
+chmod 700 ~/.ssh
+chmod 600 ~/.ssh/id_ed25519
+chmod 644 ~/.ssh/id_ed25519.pub
+bash install.sh
+```
+
 ### Colima Won't Start
 
 ```bash
@@ -224,7 +278,14 @@ Or restart your terminal.
 
 ### VS Code Extensions Fail To Install
 
-Ensure the `code` command line tool is available:
+Open VS Code once, then rerun Homebrew Bundle for the profile that failed:
+
+```bash
+brew bundle install --file Brewfile
+brew bundle install --file Brewfile.backend
+```
+
+If the `code` command is not available:
 
 ```bash
 # Open VS Code

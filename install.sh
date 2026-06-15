@@ -18,6 +18,26 @@ function on_error() {
     error "Install failed near line ${line_number}."
 }
 
+function start_sudo_keepalive() {
+    (
+        trap - ERR
+        set +e
+        while true; do
+            sudo -n true >/dev/null 2>&1
+            sleep 60
+            kill -0 "$$" >/dev/null 2>&1 || exit 0
+        done
+    ) &
+    SUDO_KEEPALIVE_PID="$!"
+}
+
+function ensure_native_shell_architecture() {
+    if [[ "$(sysctl -in sysctl.proc_translated 2>/dev/null || true)" == "1" ]]; then
+        error "This terminal is running under Rosetta. Open a native terminal and rerun install.sh so Homebrew installs Apple Silicon packages."
+        exit 1
+    fi
+}
+
 function ensure_homebrew() {
     if command -v brew >/dev/null 2>&1; then
         return
@@ -81,6 +101,40 @@ function clone_or_update_repo() {
     fi
 
     git clone "$repo_url" "$target_dir"
+}
+
+function allow_login_shell() {
+    local shell_path="$1"
+
+    if [[ -z "$shell_path" ]]; then
+        return 1
+    fi
+
+    if grep -qxF "$shell_path" /etc/shells; then
+        return 0
+    fi
+
+    bot "Adding $shell_path to /etc/shells..."
+    if printf '%s\n' "$shell_path" | sudo tee -a /etc/shells >/dev/null; then
+        ok "$shell_path added to /etc/shells"
+        return 0
+    fi
+
+    warn "Could not add $shell_path to /etc/shells. Skipping shell change."
+    return 1
+}
+
+function secure_ssh_key_permissions() {
+    local private_key="$1"
+    local public_key="${private_key}.pub"
+
+    chmod 700 "$(dirname "$private_key")"
+    if [[ -f "$private_key" ]]; then
+        chmod 600 "$private_key"
+    fi
+    if [[ -f "$public_key" ]]; then
+        chmod 644 "$public_key"
+    fi
 }
 
 function install_brewfile() {
@@ -159,8 +213,7 @@ bot "Hi! I'm going to install tooling and tweak your system settings. Here I go.
 sudo -v
 
 # Keep-alive: update existing sudo time stamp if set, otherwise do nothing.
-while true; do sudo -n true; sleep 60; kill -0 "$$" || exit; done 2>/dev/null &
-SUDO_KEEPALIVE_PID="$!"
+start_sudo_keepalive
 
 # ###############################################################################
 # # 		Git config
@@ -191,6 +244,8 @@ else
     ssh-keygen -o -a 100 -t ed25519 -C "$email" -f "$ssh_key"
     generated_ssh_key=true
 fi
+
+secure_ssh_key_permissions "$ssh_key"
 
 eval "$(ssh-agent -s)"
 if ssh-add --apple-use-keychain "$ssh_key" 2>/dev/null; then
@@ -232,6 +287,7 @@ fi
 # # 		Install HomeBrew and Cask
 # ###############################################################################
 
+ensure_native_shell_architecture
 ensure_homebrew
 brew update
 
@@ -277,10 +333,8 @@ ok "Git config updated"
 
 zsh_path="$(command -v zsh || true)"
 if [[ -n "$zsh_path" && "${SHELL:-}" != "$zsh_path" ]]; then
-    if grep -qxF "$zsh_path" /etc/shells; then
+    if allow_login_shell "$zsh_path"; then
         chsh -s "$zsh_path" || warn "Could not change default shell to $zsh_path."
-    else
-        warn "$zsh_path is not listed in /etc/shells. Skipping shell change."
     fi
 fi
 
@@ -374,4 +428,8 @@ fi
 # 		Setup OS X defaults and other useful tweaks.
 ###############################################################################
 
-source "$SCRIPT_DIR/osx-settings.sh"
+bot "Applying macOS defaults..."
+(
+    set +e
+    source "$SCRIPT_DIR/osx-settings.sh"
+)
