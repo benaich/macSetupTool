@@ -5,6 +5,18 @@ if ! declare -F warn >/dev/null || ! declare -F ok >/dev/null; then
     source "$SCRIPT_DIR/util.sh"
 fi
 
+trap - ERR
+
+function defaults() {
+    command defaults "$@" >/dev/null 2>&1 || warn "Could not apply macOS default: defaults $*"
+    return 0
+}
+
+function chflags() {
+    command chflags "$@" >/dev/null 2>&1 || warn "Could not update file flags: chflags $*"
+    return 0
+}
+
 # Disable the sound effects on boot
 sudo nvram SystemAudioVolume=" " 2>/dev/null || warn "Could not disable the boot sound on this Mac."
 

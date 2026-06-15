@@ -430,6 +430,7 @@ fi
 
 bot "Applying macOS defaults..."
 (
+    trap - ERR
     set +e
     source "$SCRIPT_DIR/osx-settings.sh"
 )
