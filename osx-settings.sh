@@ -26,6 +26,11 @@ sudo scutil --set HostName macpro || warn "Could not set HostName."
 # Disable Spotlight
 # sudo launchctl unload -w /System/Library/LaunchDaemons/com.apple.metadata.mds.plist
 
+# Disable Spotlight hotkeys so Raycast can use Command+Space
+defaults write com.apple.symbolichotkeys AppleSymbolicHotKeys -dict-add 64 '{ enabled = 0; value = { parameters = (32, 49, 1048576); type = standard; }; }'
+defaults write com.apple.symbolichotkeys AppleSymbolicHotKeys -dict-add 65 '{ enabled = 0; value = { parameters = (32, 49, 1572864); type = standard; }; }'
+defaults write com.raycast.macos raycastGlobalHotkey -string "Command-49"
+
 # Privacy: don’t send search queries to Apple
 defaults write com.apple.Safari UniversalSearchEnabled -bool false
 defaults write com.apple.Safari SuppressSearchSuggestions -bool true
